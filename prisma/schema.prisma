@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Status flow: BARU -> DIKONFIRMASI -> DIJEMPUT -> DICUCI -> DIKIRIM -> SELESAI
+// BATAL bisa dari mana saja. SQLite di Prisma tidak mendukung `enum`,
+// jadi status disimpan sebagai String (divalidasi di kode).
+model Order {
+  id           Int       @id @default(autoincrement())
+  orderNo      String    @unique
+  customerName String
+  phone        String // nomor WhatsApp customer (untuk konfirmasi outbound)
+  orderType    String // "fast" | "deep" | "express" | "premium" | "hemat" | "aktif"
+  qty          Int       @default(1)
+  amount       Int // harga satuan SAAT PESANAN DIBUAT (snapshot, rupiah)
+  total        Int       @default(0) // amount * qty - discount (snapshot, dipakai laporan)
+  discount     Int       @default(0)
+  promoCode    String?
+  status       String    @default("BARU")
+  isPaid       Boolean   @default(false)
+  paidAt       DateTime?
+  pickupDate   DateTime
+  pickupSlot   String
+  address      String
+  notes        String?
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime? // terisi saat status jadi SELESAI (dipakai laporan)
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([completedAt])
+}
+
+// Pengaturan harga layanan (diedit dari admin)
+model Service {
+  id             Int     @id @default(autoincrement())
+  key            String  @unique // "fast" | "deep" | ...
+  name           String // "Fast Clean"
+  price          Int // 30000 — untuk premium isi 0 (konsultasi)
+  isSubscription Boolean @default(false) // hemat/aktif = paket bulanan
+  isActive       Boolean @default(true)
+}
+
+// Jam buka, satu baris per hari
+model BusinessHour {
+  id        Int     @id @default(autoincrement())
+  dayOfWeek Int     @unique // 0=Minggu, 1=Senin, ... 6=Sabtu
+  isOpen    Boolean
+  openTime  String // "09.00"
+  closeTime String // "22.00"
+}
