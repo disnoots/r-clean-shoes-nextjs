@@ -9,8 +9,8 @@ const SERVICES = [
   { key: "deep", name: "Deep Clean", price: 40000, isSubscription: false },
   { key: "express", name: "Express", price: 50000, isSubscription: false },
   { key: "premium", name: "Premium", price: 0, isSubscription: false },
-  { key: "hemat", name: "Paket Hemat", price: 80000, isSubscription: true },
-  { key: "aktif", name: "Paket Aktif", price: 110000, isSubscription: true },
+  { key: "hemat", name: "Paket Hemat", price: 90000, isSubscription: true },
+  { key: "aktif", name: "Paket Aktif", price: 120000, isSubscription: true },
 ];
 
 const DAYS = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];

@@ -4,26 +4,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { SectionHeading } from "./bits";
 import { useWaNumber } from "./wa-context";
 
-// const WA_NUMBER = "6285218221931";
-const WA_NUMBER = "6289665614852";
+type Svc = { key: string; name: string; price: number; isSubscription: boolean };
 
-const P: Record<string, number> = {
-  fast: 35000,
-  deep: 40000,
-  express: 50000,
-  premium: 0,
-  hemat: 80000,
-  aktif: 110000,
-};
-
-const N: Record<string, string> = {
-  fast: "Fast Clean",
-  deep: "Deep Clean",
-  express: "Express",
-  premium: "Premium",
-  hemat: "Paket Hemat",
-  aktif: "Paket Aktif",
-};
+// Fallback jika API/DB belum terpasang — nama & harga default (sama dengan seed)
+const DEFAULT_SERVICES: Svc[] = [
+  { key: "fast", name: "Fast Clean", price: 30000, isSubscription: false },
+  { key: "deep", name: "Deep Clean", price: 40000, isSubscription: false },
+  { key: "express", name: "Express", price: 50000, isSubscription: false },
+  { key: "premium", name: "Premium", price: 0, isSubscription: false },
+  { key: "hemat", name: "Paket Hemat", price: 80000, isSubscription: true },
+  { key: "aktif", name: "Paket Aktif", price: 110000, isSubscription: true },
+];
 
 const CODE = "NEWCLEAN10";
 const END = new Date("2026-12-31T23:59:59+07:00");
@@ -60,7 +51,18 @@ export default function OrderForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [services, setServices] = useState<Svc[]>(DEFAULT_SERVICES);
   const waNumber = useWaNumber();
+
+  // Harga & nama layanan dari database (diatur lewat halaman admin)
+  useEffect(() => {
+    fetch("/api/services", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.services?.length) setServices(d.services);
+      })
+      .catch(() => {});
+  }, []);
 
   const namaRef = useRef<HTMLInputElement>(null);
   const waRef = useRef<HTMLInputElement>(null);
@@ -83,7 +85,10 @@ export default function OrderForm({
     setTgl(today);
   }, []);
 
-  const paket = svc === "hemat" || svc === "aktif";
+  // Jaga-jaga: kalau layanan terpilih dinonaktifkan admin, pakai layanan pertama
+  const svcKey = services.some((s) => s.key === svc) ? svc : services[0].key;
+  const service = services.find((s) => s.key === svcKey) ?? services[0];
+  const paket = service.isSubscription;
   const q = paket ? 1 : Math.max(1, parseInt(qty) || 1);
 
   // Logika kalkulasi & validasi kode promo — sama seperti script HTML asli
@@ -92,11 +97,11 @@ export default function OrderForm({
     let msg = "";
     let disc = 0;
     let ok = false;
-    const sub = P[svc] * q;
+    const sub = service.price * q;
     if (k) {
       if (k !== CODE) msg = "Kode tidak dikenali.";
       else if (new Date() > END) msg = "Kode sudah berakhir.";
-      else if (paket || svc === "premium")
+      else if (paket || service.price === 0)
         msg = "Kode berlaku untuk layanan satuan (Fast, Deep, Express).";
       else {
         disc = Math.round(sub * 0.1);
@@ -104,10 +109,10 @@ export default function OrderForm({
       }
     }
     return { sub, disc, ok, k, msg };
-  }, [kode, paket, q, svc]);
+  }, [kode, paket, q, service]);
 
   const kodeMsg = calc.ok ? "Kode dipakai: diskon 10%." : calc.msg;
-  const total = svc === "premium" ? null : calc.sub - calc.disc;
+  const total = service.price === 0 ? null : calc.sub - calc.disc;
   const tnote =
     "Antar jemput gratis" +
     (calc.disc ? " · hemat " + rp(calc.disc) : "") +
@@ -153,7 +158,7 @@ export default function OrderForm({
         body: JSON.stringify({
           customerName: nama,
           phone: wa,
-          orderType: svc,
+          orderType: svcKey,
           qty: q,
           pickupDate: tgl,
           pickupSlot: jam,
@@ -196,7 +201,7 @@ export default function OrderForm({
       "WhatsApp: " + wa.trim(),
       "Tanggal jemput: " + t + ", jam " + jam,
       "Alamat: " + alamat.trim(),
-      "Layanan: " + N[svc] + (paket ? "" : " x" + q + " pasang"),
+      "Layanan: " + service.name + (paket ? "" : " x" + q + " pasang"),
       "Catatan: " + (cat.trim() || "-"),
       "Kode promo: " + (calc.ok ? calc.k : "-"),
       "Estimasi total: " + (total === null ? "dikonfirmasi setelah cek" : rp(total)),
@@ -275,10 +280,10 @@ export default function OrderForm({
                 onChange={(e) => setJam(e.target.value)}
                 className={inputCls}
               >
-                <option>09.00–12.00</option>
-                <option>12.00–15.00</option>
-                <option>15.00–18.00</option>
-                <option>18.00–21.00</option>
+                <option>09.00-12.00</option>
+                <option>12.00-15.00</option>
+                <option>15.00-18.00</option>
+                <option>18.00-21.00</option>
               </select>
             </label>
           </div>
@@ -301,16 +306,20 @@ export default function OrderForm({
             <label className="grid gap-1.25 text-[0.92rem] font-bold">
               Layanan
               <select
-                value={svc}
+                value={svcKey}
                 onChange={(e) => setSvc(e.target.value)}
                 className={inputCls}
               >
-                <option value="fast">Fast Clean – Rp35.000</option>
-                <option value="deep">Deep Clean – Rp40.000</option>
-                <option value="express">Express – Rp50.000</option>
-                <option value="premium">Premium (kulit, suede, bahan mewah)</option>
-                <option value="hemat">Paket Hemat – Rp80.000/bulan</option>
-                <option value="aktif">Paket Aktif – Rp110.000/bulan</option>
+                {services.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {s.name}
+                    {s.price === 0
+                      ? " (harga dicek dulu)"
+                      : s.isSubscription
+                        ? ` – ${rp(s.price)}/bulan`
+                        : ` – ${rp(s.price)}`}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="grid gap-1.25 text-[0.92rem] font-bold">
@@ -359,7 +368,9 @@ export default function OrderForm({
           <div className="grid gap-1 rounded-xl bg-foam px-4.5 py-4" aria-live="polite">
             <small className="text-mute">Estimasi total</small>
             <strong className="text-[1.4rem] font-extrabold">
-              {svc === "premium" ? "Dikonfirmasi setelah cek" : rp(total as number)}
+              {service.price === 0
+                ? "Dikonfirmasi setelah cek"
+                : rp(total as number)}
             </strong>
             <small className="text-mute">{tnote}</small>
           </div>

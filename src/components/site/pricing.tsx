@@ -38,7 +38,7 @@ const PLANS = [
     id: "hemat",
     name: "Paket Hemat",
     tag: null,
-    rp: "Rp80.000",
+    rp: "Rp90.000",
     best: false,
     items: [
       "3x cuci sepatu",
@@ -51,7 +51,7 @@ const PLANS = [
     id: "aktif",
     name: "Paket Aktif",
     tag: "Terbaik",
-    rp: "Rp110.000",
+    rp: "Rp120.000",
     best: true,
     items: [
       "4x cuci sepatu",
