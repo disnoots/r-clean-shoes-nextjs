@@ -7,15 +7,15 @@ const PRICES = [
     id: "fast",
     name: "Fast Clean",
     tag: "Terpopuler",
-    rp: "Rp30.000",
-    desc: "Kotor ringan, sneaker, bahan aman. Selesai 2–3 hari.",
+    rp: "Rp35.000",
+    desc: "Kotor ringan, sneaker, bahan aman. Selesai 2-3 hari.",
   },
   {
     id: "deep",
     name: "Deep Clean",
     tag: null,
     rp: "Rp40.000",
-    desc: "Kotor berat, bau, atau perlu perawatan khusus. Selesai 2–3 hari.",
+    desc: "Kotor berat, bau, atau perlu perawatan khusus. Selesai 2-3 hari.",
   },
   {
     id: "express",
@@ -41,8 +41,8 @@ const PLANS = [
     rp: "Rp80.000",
     best: false,
     items: [
-      "3× cuci sepatu",
-      "Kotor ringan, 2–3 hari",
+      "3x cuci sepatu",
+      "Kotor ringan, 2-3 hari",
       "Antar jemput gratis",
       "Gratis tas sepatu",
     ],
@@ -54,9 +54,9 @@ const PLANS = [
     rp: "Rp110.000",
     best: true,
     items: [
-      "4× cuci sepatu",
+      "4x cuci sepatu",
       "Prioritas pengerjaan",
-      "Gratis 1× Express",
+      "Gratis 1x Express",
       "Antar jemput gratis",
       "Gratis tas sepatu",
     ],
@@ -70,7 +70,7 @@ export default function Pricing({
 }) {
   return (
     <section id="harga" className="py-14">
-      <div className="mx-auto max-w-[1020px] px-5">
+      <div className="mx-auto max-w-255 px-5">
         <SectionHeading
           title="Harga layanan"
           sub="Harga per pasang. Pilih sesuai tingkat kotor sepatumu."
@@ -80,7 +80,7 @@ export default function Pricing({
           {PRICES.map((p) => (
             <div
               key={p.id}
-              className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 gap-y-1 border-b border-line py-[18px]"
+              className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 gap-y-1 border-b border-line py-4.5"
             >
               <h3 className="text-[1.15rem] font-extrabold">
                 {p.name}
@@ -105,7 +105,7 @@ export default function Pricing({
           Lebih hemat untuk yang rutin cuci sepatu.
         </p>
 
-        <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-[18px]">
+        <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4.5">
           {PLANS.map((plan) => (
             <div
               key={plan.id}
@@ -127,7 +127,7 @@ export default function Pricing({
                   /bulan
                 </small>
               </div>
-              <ul className="mb-[18px] grid list-none gap-1.5 p-0 [&>li]:before:mr-1 [&>li]:before:font-extrabold [&>li]:before:content-['✓'] [&>li]:before:text-gold-dark">
+              <ul className="mb-4.5 grid list-none gap-1.5 p-0 [&>li]:before:mr-1 [&>li]:before:font-extrabold [&>li]:before:content-['✓'] [&>li]:before:text-gold-dark">
                 {plan.items.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
@@ -136,7 +136,7 @@ export default function Pricing({
                 href="#pesan"
                 data-pick={plan.id}
                 onClick={() => onPick(plan.id)}
-                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-gold px-[22px] py-[13px] font-bold text-navy no-underline"
+                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-gold px-5.5 py-3.25 font-bold text-navy no-underline"
               >
                 Pilih {plan.name}
               </a>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import SiteHeader from "@/components/site/site-header";
 import Hero from "@/components/site/hero";
 import { Ticker } from "@/components/site/bits";
@@ -12,6 +12,7 @@ import Testimonials from "@/components/site/testimonials";
 import OrderForm from "@/components/site/order-form";
 import Faq from "@/components/site/faq";
 import SiteFooter from "@/components/site/site-footer";
+import { DEFAULT_WA, WaContext } from "@/components/site/wa-context";
 
 export default function Home() {
   // Dipakai bersama antara tombol "Pilih paket", section promo, dan form pesan
@@ -19,7 +20,18 @@ export default function Home() {
   const [kode, setKode] = useState("");
   const [toast, setToast] = useState("");
   const [showGaleri, setShowGaleri] = useState(true);
+  // Nomor WA admin dari database (diatur di /admin), fallback ke nomor lama
+  const [wa, setWa] = useState(DEFAULT_WA);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    fetch("/api/services", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.waNumber) setWa(d.waNumber);
+      })
+      .catch(() => {});
+  }, []);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -37,6 +49,7 @@ export default function Home() {
   );
 
   return (
+    <WaContext.Provider value={wa}>
     <div className="flex min-h-screen flex-col">
       <SiteHeader showGaleri={showGaleri} />
 
@@ -62,7 +75,7 @@ export default function Home() {
       {/* Tombol WhatsApp mengapung */}
       <a
         className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-wa px-5.5 py-3.25 font-bold text-white shadow-[0_6px_20px_rgba(0,0,0,0.25)] fixed right-4 bottom-4 z-30"
-        href="https://wa.me/6285218221931?text=Halo%20R%20Clean%20Shoes%2C%20saya%20mau%20tanya."
+        href={`https://wa.me/${wa}?text=Halo%20R%20Clean%20Shoes%2C%20saya%20mau%20tanya.`}
         target="_blank"
         rel="noopener"
         aria-label="Chat WhatsApp"
@@ -80,5 +93,6 @@ export default function Home() {
         {toast}
       </div>
     </div>
+    </WaContext.Provider>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SectionHeading } from "./bits";
+import { useWaNumber } from "./wa-context";
 
 // const WA_NUMBER = "6285218221931";
 const WA_NUMBER = "6289665614852";
@@ -59,6 +60,7 @@ export default function OrderForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const waNumber = useWaNumber();
 
   const namaRef = useRef<HTMLInputElement>(null);
   const waRef = useRef<HTMLInputElement>(null);
@@ -201,7 +203,7 @@ export default function OrderForm({
     ];
     window.open(
       "https://wa.me/" +
-        WA_NUMBER +
+        waNumber +
         "?text=" +
         encodeURIComponent(lines.join("\n")),
       "_blank",
@@ -303,7 +305,7 @@ export default function OrderForm({
                 onChange={(e) => setSvc(e.target.value)}
                 className={inputCls}
               >
-                <option value="fast">Fast Clean – Rp30.000</option>
+                <option value="fast">Fast Clean – Rp35.000</option>
                 <option value="deep">Deep Clean – Rp40.000</option>
                 <option value="express">Express – Rp50.000</option>
                 <option value="premium">Premium (kulit, suede, bahan mewah)</option>

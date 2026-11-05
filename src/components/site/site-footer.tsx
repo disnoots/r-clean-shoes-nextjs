@@ -1,4 +1,7 @@
+import { useWaNumber } from "./wa-context";
+
 export default function SiteFooter() {
+  const wa = useWaNumber();
   return (
     <footer className="mt-auto bg-navy pt-10 pb-[calc(90px+env(safe-area-inset-bottom))] text-[0.94rem] text-haze">
       <div className="mx-auto grid max-w-255 grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-6 px-5">
@@ -36,8 +39,8 @@ export default function SiteFooter() {
         <div>
           <h3 className="mb-1.5 text-base font-extrabold text-white">Kontak</h3>
           <p>
-            <a className="text-white underline" href="https://wa.me/6285218221931" target="_blank" rel="noopener">
-              +62 852 1822 1931
+            <a className="text-white underline" href={`https://wa.me/${wa}`} target="_blank" rel="noopener">
+              +{wa.slice(0, 2)} {wa.slice(2)}
             </a>
             <br />© 2026 R Clean Shoes
           </p>

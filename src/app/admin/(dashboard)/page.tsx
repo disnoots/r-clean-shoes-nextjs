@@ -48,6 +48,7 @@ export default function AdminDashboard() {
   const [hours, setHours] = useState<Hour[]>([]);
   const [toast, setToast] = useState("");
   const [saving, setSaving] = useState("");
+  const [waNumber, setWaNumber] = useState("")
 
   const notify = (m: string) => { setToast(m); setTimeout(() => setToast(""), 2500); };
 
@@ -62,12 +63,14 @@ export default function AdminDashboard() {
   }, [statusFilter]);
 
   const loadSettings = useCallback(async () => {
-    const [s, h] = await Promise.all([
+    const [s, h, st] = await Promise.all([
       fetch("/api/admin/services").then((r) => (r.ok ? r.json() : null)),
       fetch("/api/admin/hours").then((r) => (r.ok ? r.json() : null)),
+      fetch("/api/admin/settings").then((r) => (r.ok ? r.json() : null)),
     ]);
     if (s) setServices(s.services);
     if (h) setHours(h.hours);
+    if (st) setWaNumber(st.waNumber);
   }, []);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch data saat mount/periode berubah
@@ -105,6 +108,18 @@ export default function AdminDashboard() {
     setSaving("");
     if (r.ok) notify("Jam buka tersimpan.");
     else notify("Gagal menyimpan jam buka.");
+  };
+
+  const saveWa = async () => {
+    setSaving("wa");
+    const r = await fetch("/api/admin/settings", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ waNumber }),
+    });
+    const data = await r.json().catch(() => ({}));
+    setSaving("");
+    if (r.ok) { setWaNumber(data.waNumber); notify("Nomor WhatsApp tersimpan. Semua tombol chat langsung ikut berubah."); }
+    else notify(data.error ?? "Gagal menyimpan nomor WhatsApp.");
   };
 
   const logout = async () => {
@@ -305,6 +320,29 @@ export default function AdminDashboard() {
             <button onClick={saveHours} disabled={saving === "hours"}
               className="cursor-pointer rounded-lg bg-gold px-4 py-2 font-bold text-navy disabled:opacity-60">
               {saving === "hours" ? "Menyimpan…" : "Simpan jam buka"}
+            </button>
+          </div>
+        </section>
+
+        {/* Nomor WhatsApp */}
+        <section>
+          <h2 className="mb-1 text-lg font-extrabold text-navy">Nomor WhatsApp admin</h2>
+          <p className="mb-4 text-sm text-mute">
+            Dipakai semua tombol chat di halaman publik (header, tombol mengapung, form pesan, FAQ, footer) dan pesanan yang masuk ke WhatsApp.
+          </p>
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white p-4">
+            <span className="font-bold">Nomor WA</span>
+            <input
+              value={waNumber}
+              onChange={(e) => setWaNumber(e.target.value)}
+              placeholder="081234567890 atau 6281234567890"
+              inputMode="tel"
+              className="w-64 rounded-lg border border-line px-2 py-1.5"
+              aria-label="Nomor WhatsApp admin"
+            />
+            <button onClick={saveWa} disabled={saving === "wa" || !waNumber.trim()}
+              className="cursor-pointer rounded-lg bg-gold px-4 py-2 font-bold text-navy disabled:opacity-60">
+              {saving === "wa" ? "Menyimpan…" : "Simpan nomor"}
             </button>
           </div>
         </section>

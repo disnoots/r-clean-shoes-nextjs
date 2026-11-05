@@ -54,3 +54,11 @@ model BusinessHour {
   openTime  String // "09.00"
   closeTime String // "22.00"
 }
+
+// ===== Pengaturan bebas (key-value) =====
+// Dipakai untuk nomor WhatsApp admin: key "wa_number"
+model Setting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}

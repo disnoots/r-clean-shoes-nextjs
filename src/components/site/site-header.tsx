@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useWaNumber } from "./wa-context";
 
 const LINKS = [
   { href: "#harga", label: "Harga" },
@@ -11,11 +12,12 @@ const LINKS = [
 ];
 
 export default function SiteHeader({ showGaleri }: { showGaleri: boolean }) {
+  const wa = useWaNumber();
   return (
     <header className="sticky top-0 z-20 bg-navy text-white">
       <div className="mx-auto flex h-15 max-w-255 items-center justify-between px-5">
         <Link
-          href="#"
+          href={`https://wa.me/${wa}`}
           className="flex items-center gap-2.5 text-lg font-extrabold tracking-[0.02em] no-underline"
         >
           <img

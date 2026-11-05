@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { getWaNumber, WA_FALLBACK } from "@/lib/settings";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -36,14 +37,14 @@ export const viewport: Viewport = {
   themeColor: "#0B1E3D",
 };
 
-const jsonLd = {
+const jsonLd = (waNumber: string) => ({
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   name: "R Clean Shoes",
   description: "Laundry sepatu profesional dengan layanan antar jemput.",
   url: SITE_URL,
-  telephone: "+6285218221931",
-  priceRange: "Rp30.000–Rp50.000",
+  telephone: "+" + waNumber,
+  priceRange: "Rp30.000-Rp50.000",
   address: {
     "@type": "PostalAddress",
     streetAddress: "Jl. Tanjung Duren Raya",
@@ -65,20 +66,21 @@ const jsonLd = {
     opens: "09:00",
     closes: "22:00",
   },
-};
+});
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const waNumber = await getWaNumber().catch(() => WA_FALLBACK);
   return (
     <html lang="id">
       <body className={`${jakarta.variable} bg-white font-sans text-ink antialiased`}>
         {children}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(waNumber)) }}
         />
       </body>
     </html>
