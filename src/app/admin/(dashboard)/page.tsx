@@ -44,11 +44,14 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [statusFilter, setStatusFilter] = useState("SEMUA");
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [services, setServices] = useState<Service[]>([]);
   const [hours, setHours] = useState<Hour[]>([]);
+  const [waNumber, setWaNumber] = useState("");
   const [toast, setToast] = useState("");
   const [saving, setSaving] = useState("");
-  const [waNumber, setWaNumber] = useState("")
 
   const notify = (m: string) => { setToast(m); setTimeout(() => setToast(""), 2500); };
 
@@ -58,9 +61,18 @@ export default function AdminDashboard() {
   }, [range]);
 
   const loadOrders = useCallback(async () => {
-    const r = await fetch(`/api/admin/orders?status=${statusFilter}&limit=100`);
-    if (r.ok) setOrders((await r.json()).orders);
-  }, [statusFilter]);
+    const r = await fetch(`/api/admin/orders?status=${statusFilter}&page=${page}`);
+    if (!r.ok) return;
+    const data = await r.json();
+    // Jaga-jaga: halaman jadi kosong (mis. pesanan terakhir dibatalkan) -> mundur satu halaman
+    if (data.orders.length === 0 && data.page > 1) {
+      setPage(data.page - 1);
+      return;
+    }
+    setOrders(data.orders);
+    setPages(data.pages);
+    setTotal(data.total);
+  }, [statusFilter, page]);
 
   const loadSettings = useCallback(async () => {
     const [s, h, st] = await Promise.all([
@@ -73,11 +85,11 @@ export default function AdminDashboard() {
     if (st) setWaNumber(st.waNumber);
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch data saat mount/periode berubah
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch data saat mount/periode berubah (setState di dalam callback async)
   useEffect(() => { loadStats(); }, [loadStats]);
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch data saat mount/filter berubah
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch data saat mount/filter/halaman berubah (setState di dalam callback async)
   useEffect(() => { loadOrders(); }, [loadOrders]);
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch data saat mount
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch data saat mount (setState di dalam callback async)
   useEffect(() => { loadSettings(); }, [loadSettings]);
 
   const patch = async (id: number, body: object) => {
@@ -215,7 +227,8 @@ export default function AdminDashboard() {
         <section>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-extrabold text-navy">Daftar pesanan</h2>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+            <select value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
               className="rounded-lg border border-line bg-white px-3 py-1.5 text-sm">
               <option value="SEMUA">Semua status</option>
               {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -263,6 +276,24 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+          {total > 0 ? (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm text-mute">
+                Menampilkan {(page - 1) * 20 + 1}–{Math.min(page * 20, total)} dari {total} pesanan
+              </p>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
+                  className="cursor-pointer rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40">
+                  ← Sebelumnya
+                </button>
+                <span className="text-sm text-mute">Halaman {page} dari {pages}</span>
+                <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page >= pages}
+                  className="cursor-pointer rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40">
+                  Berikutnya →
+                </button>
+              </div>
+            </div>
+          ) : null}
         </section>
 
         {/* Pengaturan harga */}
@@ -296,6 +327,29 @@ export default function AdminDashboard() {
           </div>
         </section>
 
+        {/* Nomor WhatsApp */}
+        <section>
+          <h2 className="mb-1 text-lg font-extrabold text-navy">Nomor WhatsApp admin</h2>
+          <p className="mb-4 text-sm text-mute">
+            Dipakai semua tombol chat di halaman publik (header, tombol mengapung, form pesan, FAQ, footer) dan pesanan yang masuk ke WhatsApp.
+          </p>
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white p-4">
+            <span className="font-bold">Nomor WA</span>
+            <input
+              value={waNumber}
+              onChange={(e) => setWaNumber(e.target.value)}
+              placeholder="081234567890 atau 6281234567890"
+              inputMode="tel"
+              className="w-64 rounded-lg border border-line px-2 py-1.5"
+              aria-label="Nomor WhatsApp admin"
+            />
+            <button onClick={saveWa} disabled={saving === "wa" || !waNumber.trim()}
+              className="cursor-pointer rounded-lg bg-gold px-4 py-2 font-bold text-navy disabled:opacity-60">
+              {saving === "wa" ? "Menyimpan…" : "Simpan nomor"}
+            </button>
+          </div>
+        </section>
+
         {/* Jam buka */}
         <section>
           <h2 className="mb-1 text-lg font-extrabold text-navy">Jam buka</h2>
@@ -320,29 +374,6 @@ export default function AdminDashboard() {
             <button onClick={saveHours} disabled={saving === "hours"}
               className="cursor-pointer rounded-lg bg-gold px-4 py-2 font-bold text-navy disabled:opacity-60">
               {saving === "hours" ? "Menyimpan…" : "Simpan jam buka"}
-            </button>
-          </div>
-        </section>
-
-        {/* Nomor WhatsApp */}
-        <section>
-          <h2 className="mb-1 text-lg font-extrabold text-navy">Nomor WhatsApp admin</h2>
-          <p className="mb-4 text-sm text-mute">
-            Dipakai semua tombol chat di halaman publik (header, tombol mengapung, form pesan, FAQ, footer) dan pesanan yang masuk ke WhatsApp.
-          </p>
-          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white p-4">
-            <span className="font-bold">Nomor WA</span>
-            <input
-              value={waNumber}
-              onChange={(e) => setWaNumber(e.target.value)}
-              placeholder="081234567890 atau 6281234567890"
-              inputMode="tel"
-              className="w-64 rounded-lg border border-line px-2 py-1.5"
-              aria-label="Nomor WhatsApp admin"
-            />
-            <button onClick={saveWa} disabled={saving === "wa" || !waNumber.trim()}
-              className="cursor-pointer rounded-lg bg-gold px-4 py-2 font-bold text-navy disabled:opacity-60">
-              {saving === "wa" ? "Menyimpan…" : "Simpan nomor"}
             </button>
           </div>
         </section>

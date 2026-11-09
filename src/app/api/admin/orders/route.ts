@@ -9,19 +9,43 @@ export async function GET(req: Request) {
 
   const params = new URL(req.url).searchParams;
   const status = params.get("status");
-  const limit = Math.min(200, Number(params.get("limit")) || 50);
+  const page = Math.max(1, Number(params.get("page")) || 1);
+  const pageSize = Math.min(50, Math.max(5, Number(params.get("pageSize")) || 20));
+  const where = status && status !== "SEMUA" ? { status } : undefined;
 
-  const orders = await db.order.findMany({
-    where: status && status !== "SEMUA" ? { status } : undefined,
-    orderBy: { id: "desc" },
-    take: limit,
-    select: {
-      id: true, orderNo: true, customerName: true, phone: true,
-      orderType: true, qty: true, amount: true, total: true, discount: true,
-      status: true, isPaid: true, pickupDate: true, pickupSlot: true,
-      address: true, notes: true, createdAt: true,
-    },
+  const [orders, total] = await Promise.all([
+    db.order.findMany({
+      where,
+      orderBy: { id: "desc" },
+      take: pageSize,
+      skip: (page - 1) * pageSize,
+      select: {
+        id: true,
+        orderNo: true,
+        customerName: true,
+        phone: true,
+        orderType: true,
+        qty: true,
+        amount: true,
+        total: true,
+        discount: true,
+        status: true,
+        isPaid: true,
+        pickupDate: true,
+        pickupSlot: true,
+        address: true,
+        notes: true,
+        createdAt: true,
+      },
+    }),
+    db.order.count({ where }),
+  ]);
+
+  return NextResponse.json({
+    orders,
+    total,
+    page,
+    pageSize,
+    pages: Math.max(1, Math.ceil(total / pageSize)),
   });
-
-  return NextResponse.json({ orders });
 }

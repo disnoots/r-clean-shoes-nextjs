@@ -11,7 +11,7 @@ const QUOTES = [
     author: "Sari Novita · Express",
   },
   {
-    text: "Paket bulanannya worth it. 4× cuci Rp110 ribu, dapat gratis Express sekali. Admin responsif.",
+    text: "Paket bulanannya worth it. 4x cuci Rp110 ribu, dapat gratis Express sekali. Admin responsif.",
     author: "Dimas Wahyu · Paket Aktif",
   },
 ];
@@ -19,9 +19,9 @@ const QUOTES = [
 export default function Testimonials() {
   return (
     <section className="py-14">
-      <div className="mx-auto max-w-[1020px] px-5">
+      <div className="mx-auto max-w-255 px-5">
         <SectionHeading title="Kata pelanggan" />
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-[18px]">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4.5">
           {QUOTES.map((q) => (
             <blockquote
               key={q.author}

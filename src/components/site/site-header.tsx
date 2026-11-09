@@ -42,7 +42,7 @@ export default function SiteHeader({ showGaleri }: { showGaleri: boolean }) {
 
         <a
           className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-wa px-3.5 py-2 text-[0.9rem] font-bold text-white"
-          href="https://wa.me/6285218221931"
+          href={`https://wa.me/${wa}`}
           target="_blank"
           rel="noopener"
         >
